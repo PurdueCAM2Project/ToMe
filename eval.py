@@ -3,12 +3,26 @@ import torch.nn
 import torch.profiler
 import torch.utils.data
 from torch.utils.data import DataLoader
-import argparse
+import torchvision
+from torchvision.datasets import ImageFolder
 from tqdm import tqdm
-from typing import List
+
+### Python
 import os
+from typing import List
+import argparse
+
+### Lightning
 import lightning as L
+
+### TIMM
 import timm
+from timm.data import create_loader
+from timm.models import create_model
+
+### ToMe Backend / Wrapper
+from tome.patch.timm import apply_patch as tome_apply_patch
+
 ###
 ### Argument parser init script
 ###
@@ -18,11 +32,12 @@ def get_args() -> argparse.Namespace:
 
     ### Config or manual entry
     parser.add_argument('--dataset', type=str, choices=['imagenet1k'])
+    parser.add_argument('--timm-model', type=str, default='deit_small_patch16_224')
     parser.add_argument('--dataset-root', type=str, required=True)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--tensorboard-profiling', action='store_true')
-    parser.add_argument('--arch', type=str, choices=['deit_small_patch16_224'])
     parser.add_argument('--resume-model', type=str)
+    parser.add_argument('--num-workers', type=int, default=4)
     args = parser.parse_args()
 
     return args
@@ -36,8 +51,7 @@ def evaluate(
     model : torch.nn.Module, 
     dataloader : DataLoader, 
     profiler : torch.profiler.profiler.profile, 
-    device : torch.device, 
-    **kwargs):
+    ):
 
     ### Set model to evaluation mode
     model.eval()
@@ -45,6 +59,10 @@ def evaluate(
     inference_time_running          = 0.0
     inference_time_recording_count  = 0.0
     inference_time_average          = 0.0
+
+    acc_top1_running                = 0.0
+    acc_top1_recording_count        = 0.0
+    acc_top1_average                = 0.0
 
     ###
     ### Iterate over the patch_series 
@@ -73,20 +91,59 @@ def evaluate(
             end_event.record()
             torch.cuda.synchronize()
 
+            ### Compute accuracy for the hell of it
+            class_prediction    = torch.argmax( output, dim=-1 )
+            correct_prediction  = class_prediction == target
+
             ### Cache inference time
-            inference_time_running += start_event.elapsed_time( end_event )
-            inference_time_recording_count += 1.0
-            inference_time_average = inference_time_running / inference_time_recording_count
+            inference_time_running          += start_event.elapsed_time( end_event )
+            inference_time_recording_count  += 1.0
+            inference_time_average          = inference_time_running / inference_time_recording_count
+
+            ### Cache accuracy
+            acc_top1_running            += correct_prediction
+            acc_top1_recording_count    += 1.0
+            acc_top1_average            = 100.0 * acc_top1_running / acc_top1_recording_count
             
             ### If we are using a profiler - step
             if profiler is not None:
                 profiler.step()
 
             ### Update progress bar
-            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f}".format(inference_time_average), refresh=True)
+            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average), refresh=True)
 
 ###
 ### Entry point
 ###
 if __name__ == '__main__':
-    pass
+    ### Get commandline args
+    args = get_args()
+
+    ### Create Fabric instance
+    fabric = L.Fabric(
+        accelerator='cuda',
+        strategy='dp',
+        devices=1,
+        num_nodes=1,
+        precision='32',
+    )
+    fabric.launch()
+
+    ### Load ImageNet1K
+    imagenet1k_dataset  = ImageFolder( root=os.path.join( args.dataset_root_dir, "val") )
+    dataloader          = create_loader( imagenet1k_dataset, (3,224,224), args.batch_size, use_prefetcher=False, is_training=False, num_workers=args.num_workers, persistent_workers=True )
+
+    ### Load TIMM model
+    model               = create_model(model_name=args.timm_model, pretrained=True)
+
+    ### Wrap with ToMe
+    model               = tome_apply_patch(model, trace_source=False, prop_attn=True)
+
+    ### Launch eval(...)
+    evaluate(
+        args=args,
+        fabric=fabric,
+        model=model,
+        dataloader=dataloader,
+        profiler=None,
+    )
