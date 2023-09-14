@@ -55,7 +55,7 @@ def tome_hardware_aware_schedule_forward( args : argparse.Namespace, model : tor
     x = model.norm_pre(x)
 
     for block_idx, block in enumerate(model.blocks):
-        if block_idx == args.r_block_set_zero_idx:
+        if args.r_block_set_zero_idx is not None and block_idx == args.r_block_set_zero_idx:
             model.r = 0
 
         x = block(x)
