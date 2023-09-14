@@ -1,3 +1,5 @@
+from timm.models.layers import PatchEmbed
+from timm.models.vision_transformer import Block
 import torch
 import torch.nn
 import torch.profiler
@@ -38,9 +40,29 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--resume-model', type=str)
     parser.add_argument('--num-workers', type=int, default=4)
     parser.add_argument('--no-wrap', action='store_true')
+    parser.add_argument('--r', type=int, default=16)
+    parser.add_argument('--r-block-set-zero-idx', type=int, default=None)
     args = parser.parse_args()
 
     return args
+
+###
+### Alternate scheduling or 'r' rather than being constant
+###
+def tome_hardware_aware_schedule_forward( args : argparse.Namespace, model : torch.nn.Module, x : torch.Tensor ):
+    x = model.patch_embed(x)
+    x = model._pos_embed(x)
+    x = model.norm_pre(x)
+
+    for block_idx, block in enumerate(model.blocks):
+        if block_idx == args.r_block_set_zero_idx:
+            model.r = 0
+
+        x = block(x)
+
+    x = model.norm(x)
+    x = model.forward_head(x)
+    return x
 
 ###
 ### "Main" Evaluation Function
@@ -85,7 +107,8 @@ def evaluate(
             ### Record inference time, do a forawrd pass
             start_event.record()
 
-            output = model.forward(input)
+            #output = model.forward(input)
+            output = tome_hardware_aware_schedule_forward(args, model, input)
 
             ### Record inference time
             end_event.record()
@@ -144,11 +167,10 @@ if __name__ == '__main__':
         pass
     else:
         tome.patch.timm(model)
-        model.r = 16
+        model.r = args.r
 
     model       = fabric.setup_module(model, move_to_device=True)
     dataloader  = fabric.setup_dataloaders(dataloader)
-    
     
     ### Launch eval(...)
     evaluate(
