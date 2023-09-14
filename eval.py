@@ -18,10 +18,9 @@ import lightning as L
 ### TIMM
 import timm
 from timm.data import create_loader
-from timm.models import create_model
 
 ### ToMe Backend / Wrapper
-from tome.patch.timm import apply_patch as tome_apply_patch
+import tome
 
 ###
 ### Argument parser init script
@@ -38,6 +37,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--tensorboard-profiling', action='store_true')
     parser.add_argument('--resume-model', type=str)
     parser.add_argument('--num-workers', type=int, default=4)
+    parser.add_argument('--no-wrap', action='store_true')
     args = parser.parse_args()
 
     return args
@@ -101,8 +101,8 @@ def evaluate(
             inference_time_average          = inference_time_running / inference_time_recording_count
 
             ### Cache accuracy
-            acc_top1_running            += correct_prediction
-            acc_top1_recording_count    += 1.0
+            acc_top1_running            += correct_prediction.sum(dim=0)
+            acc_top1_recording_count    += input.shape[0]
             acc_top1_average            = 100.0 * acc_top1_running / acc_top1_recording_count
             
             ### If we are using a profiler - step
@@ -110,7 +110,7 @@ def evaluate(
                 profiler.step()
 
             ### Update progress bar
-            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average), refresh=True)
+            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average.item()), refresh=True)
 
 ###
 ### Entry point
@@ -130,15 +130,26 @@ if __name__ == '__main__':
     fabric.launch()
 
     ### Load ImageNet1K
-    imagenet1k_dataset  = ImageFolder( root=os.path.join( args.dataset_root_dir, "val") )
+    imagenet1k_dataset  = ImageFolder( root=os.path.join( args.dataset_root, "val") )
     dataloader          = create_loader( imagenet1k_dataset, (3,224,224), args.batch_size, use_prefetcher=False, is_training=False, num_workers=args.num_workers, persistent_workers=True )
 
     ### Load TIMM model
-    model               = create_model(model_name=args.timm_model, pretrained=True)
-
+    model               = timm.create_model(model_name=args.timm_model, pretrained=True)
+    if model is None:
+        print('eval.py: Incorrect --timm-model: {}'.format(args.timm_model))
+        exit(1)
+    
     ### Wrap with ToMe
-    model               = tome_apply_patch(model, trace_source=False, prop_attn=True)
+    if args.no_wrap:
+        pass
+    else:
+        tome.patch.timm(model)
+        model.r = 16
 
+    model       = fabric.setup_module(model, move_to_device=True)
+    dataloader  = fabric.setup_dataloaders(dataloader)
+    
+    
     ### Launch eval(...)
     evaluate(
         args=args,
