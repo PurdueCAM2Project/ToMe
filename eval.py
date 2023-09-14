@@ -147,7 +147,6 @@ if __name__ == '__main__':
         pass
     else:
         tome.patch.timm(model)
-        model.r = args.r
         model._tome_info["r"] = parse_r(len(model.blocks), [24, 24, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     model       = fabric.setup_module(model, move_to_device=True)
