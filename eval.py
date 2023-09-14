@@ -88,7 +88,7 @@ def evaluate(
             ### Record inference time, do a forawrd pass
             start_event.record()
 
-            output = model.forward(input)
+            output = model(input)
 
             ### Record inference time
             end_event.record()
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         pass
     else:
         tome.patch.timm(model)
-        model._tome_info["r"] = parse_r(len(model.blocks), [24, 24, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        model._tome_info["r"] = parse_r(len(model.blocks), [25, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
     model       = fabric.setup_module(model, move_to_device=True)
     dataloader  = fabric.setup_dataloaders(dataloader)
