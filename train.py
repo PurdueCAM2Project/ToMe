@@ -189,7 +189,7 @@ def train(
             output = model(input)
 
             loss = cross_entropy_loss(output, target)
-            loss.backward()
+            fabric.backward(loss)
             optimizer.step()
             scheduler.step()
             
@@ -248,15 +248,15 @@ if __name__ == '__main__':
     dataloader          = create_loader( imagenet1k_dataset, (3,224,224), args.batch_size, re_prob=0.1, use_prefetcher=False, is_training=True, num_workers=args.num_workers, persistent_workers=True )
 
     ### Load TIMM model
-    model               = timm.create_model(model_name=args.timm_model, pretrained=True)
+    model = timm.create_model(model_name=args.timm_model, pretrained=True)
     if model is None:
         print('train.py: Incorrect --timm-model: {}'.format(args.timm_model))
         exit(1)
     
     ### Wrap with ToMe
     tome.patch.timm(model)
-    model._tome_info["r"] = parse_r(len(model.blocks), args.r if args.r_list is None else args.r_list)
-    print('train.py: ToMe r = {}'.format( model._tome_info["r"] ))
+    model.r = args.r if args.r_list is None else args.r_list
+    print('train.py: ToMe r = {}'.format( model.r ))
 
     ### Setup model and dataloader with Fabric
     model       = fabric.setup_module(model)
