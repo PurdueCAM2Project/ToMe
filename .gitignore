@@ -3,3 +3,7 @@ __pycache__/
 *.egg-info/
 build/
 test.py
+config/*
+bin/*
+!config/.gitkeep
+!bin/.gitkeep

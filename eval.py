@@ -148,6 +148,7 @@ if __name__ == '__main__':
     else:
         tome.patch.timm(model)
         model._tome_info["r"] = parse_r(len(model.blocks), [25, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        print('ToMe r = {}'.format( model._tome_info["r"] ))
 
     model       = fabric.setup_module(model, move_to_device=True)
     dataloader  = fabric.setup_dataloaders(dataloader)
