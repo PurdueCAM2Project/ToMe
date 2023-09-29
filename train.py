@@ -161,6 +161,9 @@ def train(
         T_max=len(dataloader)
     )
 
+    ### Setup with Fabric
+    optimizer = fabric.setup_optimizers(optimizer)
+
     ### Cross Entropy Loss
     cross_entropy_loss = torch.nn.CrossEntropyLoss(reduction='mean')
 
