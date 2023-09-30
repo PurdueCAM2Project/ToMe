@@ -34,7 +34,7 @@ class ToMeBlock(Block):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Note: this is copied from timm.models.vision_transformer.Block with modifications.
         attn_size = self._tome_info["size"] if self._tome_info["prop_attn"] else None
-        x_attn, metric = self.attn(self.norm1(x), attn_size)
+        x_attn, metric = self.ls1(self.attn(self.norm1(x), attn_size))
         x = x + self._drop_path1(x_attn)
 
         r = self._tome_info["r"].pop(0)
@@ -52,7 +52,7 @@ class ToMeBlock(Block):
                 )
             x, self._tome_info["size"] = merge_wavg(merge, x, self._tome_info["size"])
 
-        x = x + self._drop_path2(self.mlp(self.norm2(x)))
+        x = x + self._drop_path2(self.ls2(self.mlp(self.norm2(x))))
         return x
 
 
