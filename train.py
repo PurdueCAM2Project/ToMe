@@ -179,7 +179,7 @@ def train(
     cross_entropy_loss = torch.nn.CrossEntropyLoss(reduction='mean')
 
     ### Distillation loss
-    kl_loss = torch.nn.KLDivLoss(reduction='mean')
+    kl_loss = torch.nn.KLDivLoss(reduction='batchmean')
 
     ### Checkpointing
     checkpoint_idx = 1
@@ -199,17 +199,23 @@ def train(
             ### Zero grad
             optimizer.zero_grad()
 
-            ### Forward pass!
-            output = model(input)
+            with torch.no_grad():
+                r_temp = model.r
+                model.r = 0
+                teacher_output = model(input)
+                model.r = r_temp
 
-            loss = cross_entropy_loss(output, target) + kl_loss
+            ### Forward pass!
+            tome_output = model(input)
+
+            loss = 0.5 * cross_entropy_loss(tome_output, target) + 0.5 * kl_loss(torch.nn.functional.log_softmax(tome_output,dim=-1), torch.nn.functional.softmax(teacher_output, dim=-1))
             fabric.backward(loss)
             optimizer.step()
             scheduler.step()
             
-            ### Update progress bar
-            #if isinstance(dataloader_object, tqdm):
-            #    dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average.item()), refresh=True)
+            ###Update progress bar
+            if isinstance(dataloader_object, tqdm):
+                dataloader_object.set_description("Avg. Current Batch Loss: {:.2f}".format(loss.item()), refresh=True)
 
         ### Save to disk
         checkpoint_model(args, fabric, model, optimizer, scheduler, checkpoint_idx)
