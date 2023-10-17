@@ -45,7 +45,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--dataset', type=str, choices=['imagenet1k'], default='imagenet1k')
     parser.add_argument('--timm-model', type=str, default='deit_small_patch16_224')
     parser.add_argument('--r', type=int, default=12)
-    parser.add_argument('--r-list', type=str, default=None)
+    parser.add_argument('--r-list', type=str, default="")
 
     ### Train parameters
     parser.add_argument('--train-strategy', type=str, default='ddp')
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         exit(0)
 
     ### Update r list
-    if args.r_list is not None:
+    if args.r_list != "":
         args.r_list = csv_string_to_int_list(args.r_list)
         print('train.py: args.r_list type: {} and value {}'.format(type(args.r_list, args.r_list)))
 
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     
     ### Wrap with ToMe
     tome.patch.timm(model)
-    model.r = args.r if args.r_list is None else args.r_list
+    model.r = args.r_list if not args.r else args.r
     print('train.py: ToMe r = {}'.format( model.r ))
 
     ### Setup model and dataloader with Fabric
