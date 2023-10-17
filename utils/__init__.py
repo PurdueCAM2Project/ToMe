@@ -12,14 +12,13 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--profile', type=str, default=None)
     parser.add_argument('--profile-output-dir', default=None)
     parser.add_argument('--resume', action="store_true")
+    parser.add_argument('--resume-checkpoint-idx', type=int, default=None)
     parser.add_argument('--dry-run-config-generate', action='store_true')
     parser.add_argument('--bin-dir', type=str, default="bin/")
     parser.add_argument('--timm-model', type=str, default='deit_small_patch16_224')
     parser.add_argument('--dataset', type=str, choices=['imagenet1k'])
-    parser.add_argument('--dataset-root-dir', type=str, required=True)
-    parser.add_argument('--batch-size', type=int, default=1)
+    parser.add_argument('--dataset-root-dir', type=str, default=None)
     parser.add_argument('--tensorboard-profiling', action='store_true')
-    parser.add_argument('--resume-checkpoint-idx', type=int, default=None)
 
     ### ToMe Parameters
     parser.add_argument('--r', type=int, default=12)
@@ -27,7 +26,6 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--no-wrap', action='store_true')
 
     ### Train parameters
-    parser.add_argument('--num-workers', type=int, default=4)
     parser.add_argument('--train-strategy', type=str, default='ddp')
     parser.add_argument('--train-precision', type=str, default='16-mixed')
     parser.add_argument('--train-epochs', type=int, default=32)
