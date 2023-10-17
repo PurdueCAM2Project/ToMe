@@ -5,7 +5,6 @@ import torch.nn
 import torch.profiler
 import torch.utils.data
 from torch.utils.data import DataLoader
-import torchvision
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
@@ -25,39 +24,8 @@ from timm.data import create_loader
 import tome
 from tome.utils import parse_r
 
-###
-### Argument parser init script
-###
-def get_args() -> argparse.Namespace:
-    ### Grab any commandline arguments
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, add_help=False)
-
-    ### Config or manual entry
-    parser.add_argument('--dataset', type=str, choices=['imagenet1k'])
-    parser.add_argument('--timm-model', type=str, default='deit_small_patch16_224')
-    parser.add_argument('--dataset-root', type=str, required=True)
-    parser.add_argument('--batch-size', type=int, default=1)
-    parser.add_argument('--tensorboard-profiling', action='store_true')
-    parser.add_argument('--resume-checkpoint-idx', type=int, default=None)
-    parser.add_argument('--num-workers', type=int, default=4)
-    parser.add_argument('--no-wrap', action='store_true')
-    parser.add_argument('--r', type=int, default=12)
-    parser.add_argument('--r-list', nargs='+', default=None)
-    args = parser.parse_args()
-
-    return args
-
-###
-### Filename generation
-###
-def generate_pth_filename( profile : str, *args ) -> str:
-    format_string = '{}'.format(profile)
-    ### Append as many args as you'd like
-    for arg in args:
-        format_string += '_{}'
-    format_string += '.pth'
-
-    return format_string.format( *args )
+### Import Utilities
+from .utils import generate_pth_filename, update_argparse_options_from_json_config, save_argparse_options_to_json_config, get_args
 
 ###
 ### "Main" Evaluation Function
@@ -136,6 +104,18 @@ if __name__ == '__main__':
     ### Get commandline args
     args = get_args()
 
+    ### Create path to json config whether we use it or not
+    config_path = os.path.normpath(os.path.join('config/', args.profile + '.json'))
+    
+    ### Check whether we are doing a dry-run
+    if args.dry_run_config_generate:
+        save_argparse_options_to_json_config(config_path, args)
+        print('train.py: Created default config, exiting')
+        exit(0)
+
+    ### Update parameters from config
+    args = update_argparse_options_from_json_config(config_path, args)
+
     ### Create Fabric instance
     fabric = L.Fabric(
         accelerator='cuda',
@@ -147,7 +127,7 @@ if __name__ == '__main__':
     fabric.launch()
 
     ### Load ImageNet1K
-    imagenet1k_dataset  = ImageFolder( root=os.path.join( args.dataset_root, "val") )
+    imagenet1k_dataset  = ImageFolder( root=os.path.join( args.dataset_root_dir, "val") )
     dataloader          = create_loader( imagenet1k_dataset, (3,224,224), args.batch_size, use_prefetcher=False, is_training=False, num_workers=args.num_workers, persistent_workers=True )
 
     ### Load TIMM model

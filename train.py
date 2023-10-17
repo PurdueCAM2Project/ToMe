@@ -32,38 +32,6 @@ from tome.utils import parse_r
 from arch.regvit import deit_small_register_patch16_224, deit_base_register_patch16_224, deit_small_distilled_register_patch16_224, deit_base_distilled_register_patch16_224
 
 ###
-### Argument parser init script
-###
-def get_args() -> argparse.Namespace:
-    ### Grab any commandline arguments
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, add_help=False)
-
-    ### Generic parameters
-    parser.add_argument('--profile', type=str, default=None)
-    parser.add_argument('--profile-output-dir', default=None)
-    parser.add_argument('--resume', action="store_true")
-    parser.add_argument('--dry-run-config-generate', action='store_true')
-    parser.add_argument('--dataset-root-dir', type=str, default=None)
-    parser.add_argument('--bin-dir', type=str, default="bin/")
-    parser.add_argument('--dataset', type=str, choices=['imagenet1k'], default='imagenet1k')
-    parser.add_argument('--timm-model', type=str, default='deit_small_patch16_224')
-    parser.add_argument('--r', type=int, default=12)
-    parser.add_argument('--r-list', nargs='+', default=None)
-
-    ### Train parameters
-    parser.add_argument('--train-strategy', type=str, default='ddp')
-    parser.add_argument('--train-precision', type=str, default='16-mixed')
-    parser.add_argument('--train-epochs', type=int, default=32)
-    parser.add_argument('--train-num-devices', type=int, default=1)
-    parser.add_argument('--train-num-nodes', type=int, default=1)
-    parser.add_argument('--lr', type=float, default=None)
-    parser.add_argument('--batch-size', type=int, default=32)
-    parser.add_argument('--num-workers', type=int, default=4)
-    args = parser.parse_args()
-
-    return args
-
-###
 ### Used for parsing commandline args that are comma separated (nice way to pass lists to argparse)
 ###
 def csv_string_to_int_list( string : str ) -> List:
