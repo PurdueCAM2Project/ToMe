@@ -231,6 +231,7 @@ if __name__ == '__main__':
     ### Update r list
     if args.r_list is not None:
         args.r_list = csv_string_to_int_list(args.r_list)
+        print('train.py: args.r_list type: {} and value {}'.format(type(args.r_list, args.r_list)))
 
     ### Update parameters from config
     args = update_argparse_options_from_json_config(config_path, args)
