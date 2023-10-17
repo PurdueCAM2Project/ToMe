@@ -41,6 +41,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--resume-checkpoint-idx', type=int, default=None)
     parser.add_argument('--num-workers', type=int, default=4)
     parser.add_argument('--no-wrap', action='store_true')
+    parser.add_argument('--r', type=int, default=12)
+    parser.add_argument('--r-list', nargs='+', default=None)
     args = parser.parse_args()
 
     return args
@@ -172,8 +174,8 @@ if __name__ == '__main__':
         pass
     else:
         tome.patch.timm(model)
-        model._tome_info["r"] = parse_r(len(model.blocks), [25, 25, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        print('ToMe r = {}'.format( model._tome_info["r"] ))
+        model.r = args.r_list if not args.r else args.r
+        print('train.py: ToMe r type and value:{} / {}'.format( type(model.r), model.r ))
 
     model       = fabric.setup_module(model, move_to_device=True)
     dataloader  = fabric.setup_dataloaders(dataloader)
