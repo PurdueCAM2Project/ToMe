@@ -25,7 +25,7 @@ import tome
 from tome.utils import parse_r
 
 ### Import Utilities
-from .utils import generate_pth_filename, update_argparse_options_from_json_config, save_argparse_options_to_json_config, get_args
+from utils import generate_pth_filename, update_argparse_options_from_json_config, save_argparse_options_to_json_config, get_args
 
 ###
 ### "Main" Evaluation Function

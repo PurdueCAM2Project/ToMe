@@ -30,6 +30,7 @@ from tome.utils import parse_r
 
 ### Arch imports
 from arch.regvit import deit_small_register_patch16_224, deit_base_register_patch16_224, deit_small_distilled_register_patch16_224, deit_base_distilled_register_patch16_224
+from utils import generate_pth_filename, get_args, save_argparse_options_to_json_config, update_argparse_options_from_json_config
 
 ###
 ### Used for parsing commandline args that are comma separated (nice way to pass lists to argparse)
