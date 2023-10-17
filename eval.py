@@ -38,12 +38,24 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--dataset-root', type=str, required=True)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--tensorboard-profiling', action='store_true')
-    parser.add_argument('--resume-model', type=str)
+    parser.add_argument('--resume-checkpoint-idx', type=int, default=None)
     parser.add_argument('--num-workers', type=int, default=4)
     parser.add_argument('--no-wrap', action='store_true')
     args = parser.parse_args()
 
     return args
+
+###
+### Filename generation
+###
+def generate_pth_filename( profile : str, *args ) -> str:
+    format_string = '{}'.format(profile)
+    ### Append as many args as you'd like
+    for arg in args:
+        format_string += '_{}'
+    format_string += '.pth'
+
+    return format_string.format( *args )
 
 ###
 ### "Main" Evaluation Function
@@ -141,6 +153,19 @@ if __name__ == '__main__':
     if model is None:
         print('eval.py: Incorrect --timm-model: {}'.format(args.timm_model))
         exit(1)
+
+    if args.resume_checkpoint_idx is not None:
+        lightning_state = fabric.load(
+            path=os.path.join(
+                args.profile_output_dir,
+                generate_pth_filename(
+                    args.profile,
+                    "lightning_checkpoint_{}".format(args.resume_checkpoint_idx),
+                    "state",
+                ),
+            ),
+        )
+        model.load_state_dict(lightning_state["model"])
     
     ### Wrap with ToMe
     if args.no_wrap:

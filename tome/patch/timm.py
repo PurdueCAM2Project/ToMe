@@ -8,7 +8,6 @@
 # timm: https://github.com/rwightman/pytorch-image-models/tree/master/timm
 # --------------------------------------------------------
 
-
 from typing import Tuple
 
 import torch
@@ -16,7 +15,6 @@ from timm.models.vision_transformer import Attention, Block, VisionTransformer
 
 from tome.merge import bipartite_soft_matching, merge_source, merge_wavg
 from tome.utils import parse_r
-
 
 class ToMeBlock(Block):
     """

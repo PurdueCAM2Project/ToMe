@@ -28,6 +28,9 @@ from timm.data import create_loader
 import tome
 from tome.utils import parse_r
 
+### Arch imports
+from arch.regvit import deit_small_register_patch16_224, deit_base_register_patch16_224, deit_small_distilled_register_patch16_224, deit_base_distilled_register_patch16_224
+
 ###
 ### Argument parser init script
 ###
@@ -199,7 +202,7 @@ def train(
             ### Forward pass!
             output = model(input)
 
-            loss = cross_entropy_loss(output, target)
+            loss = cross_entropy_loss(output, target) + kl_loss
             fabric.backward(loss)
             optimizer.step()
             scheduler.step()
