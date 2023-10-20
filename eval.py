@@ -7,6 +7,7 @@ import torch.utils.data
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
+import warnings
 
 ### Python
 import os
@@ -116,6 +117,9 @@ def evaluate(
 ### Entry point
 ###
 if __name__ == '__main__':
+    ### Ignore all warnings
+    warnings.filterwarnings("ignore")
+
     ### Get commandline args
     args = get_args()
 
@@ -173,7 +177,7 @@ if __name__ == '__main__':
     else:
         tome.patch.timm(model)
         model.r = args.r_list if not args.r else args.r
-        print('train.py: ToMe r type and value:{} / {}'.format( type(model.r), model.r ))
+        #print('train.py: ToMe r type and value:{} / {}'.format( type(model.r), model.r ))
 
     model       = fabric.setup_module(model, move_to_device=True)
     dataloader  = fabric.setup_dataloaders(dataloader)
