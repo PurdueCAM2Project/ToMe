@@ -41,13 +41,19 @@ def evaluate(
     ### Set model to evaluation mode
     model.eval()
 
-    inference_time_running          = 0.0
-    inference_time_recording_count  = 0.0
-    inference_time_average          = 0.0
+    ### Get len of dataset
+    batch_count = len(dataloader)
 
-    acc_top1_running                = 0.0
-    acc_top1_recording_count        = 0.0
-    acc_top1_average                = 0.0
+    ### Lists that we use to collect data about our model
+    ### NOTE: For timing, we put the tensors on the CPU since the CUDA timing returns Python float scalars
+    ### NOTE: Check whether we are enforcing a forward pass count
+    model_inference_time_tensor = torch.empty(
+        size=(batch_count, 1), dtype=torch.float32, device="cpu"
+    )
+    model_correct_prediction_tensor = torch.empty(
+        size=(batch_count, 1), dtype=torch.float32, device="cuda"
+    )
+    model_prediction_count = 0
 
     ###
     ### Iterate over the patch_series 
@@ -76,26 +82,34 @@ def evaluate(
             end_event.record()
             torch.cuda.synchronize()
 
-            ### Compute accuracy for the hell of it
-            class_prediction    = torch.argmax( output, dim=-1 )
-            correct_prediction  = class_prediction == target
+            ### Update prediction count based on batch size
+            model_prediction_count += input.shape[0]
+
+            ### Perform argmax to get the prediction
+            class_correct_prediction = torch.argmax(output, dim=1) == target
 
             ### Cache inference time
-            inference_time_running          += start_event.elapsed_time( end_event )
-            inference_time_recording_count  += 1.0
-            inference_time_average          = inference_time_running / inference_time_recording_count
+            model_inference_time_tensor[batch_index] = start_event.elapsed_time(
+                end_event
+            )
 
-            ### Cache accuracy
-            acc_top1_running            += correct_prediction.sum(dim=0)
-            acc_top1_recording_count    += input.shape[0]
-            acc_top1_average            = 100.0 * acc_top1_running / acc_top1_recording_count
+            ### Cache correct prediction
+            ### TODO: Add a way to parse the type of dataset we are working with - this works for classification tasks
+            model_correct_prediction_tensor[batch_index] = class_correct_prediction.sum(
+                dim=0
+            )
             
             ### If we are using a profiler - step
             if profiler is not None:
                 profiler.step()
 
             ### Update progress bar
-            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average.item()), refresh=True)
+            #dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average.item()), refresh=True)
+            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(
+                model_inference_time_tensor[0:(batch_index+1)].sum().item() / (batch_index+1), 
+                100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
+                refresh=True)
+            )
 
 ###
 ### Entry point
