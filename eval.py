@@ -116,6 +116,9 @@ if __name__ == '__main__':
     ### Update parameters from config
     args = update_argparse_options_from_json_config(config_path, args)
 
+    ### Set matmul precision to high
+    torch.set_float32_matmul_precision('high')
+
     ### Create Fabric instance
     fabric = L.Fabric(
         accelerator='cuda',
