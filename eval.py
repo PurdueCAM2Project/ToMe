@@ -60,13 +60,14 @@ def evaluate(
     ### Turn off gradient
     ###
     with torch.no_grad():
-        start_event             = torch.cuda.Event(enable_timing=True)
-        end_event               = torch.cuda.Event(enable_timing=True)
-
         ### Create tqdm object
         dataloader_object = tqdm(dataloader)
 
         for batch_index, (input, target) in enumerate(dataloader_object):
+            ### Create CUDA timing events
+            start_event = torch.cuda.Event(enable_timing=True)
+            end_event = torch.cuda.Event(enable_timing=True)
+
             ### Warmup
             if batch_index < 1:
                 for _ in range(25):
