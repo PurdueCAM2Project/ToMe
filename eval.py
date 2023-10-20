@@ -43,7 +43,7 @@ def evaluate(
     model.eval()
 
     ### Get len of dataset
-    batch_count = len(dataloader)
+    batch_count = len(dataloader) if args.forward_pass_count is None else args.forward_pass_count
 
     ### Lists that we use to collect data about our model
     ### NOTE: For timing, we put the tensors on the CPU since the CUDA timing returns Python float scalars
@@ -74,6 +74,10 @@ def evaluate(
                 for _ in range(25):
                     model(input)
                 torch.cuda.synchronize()
+
+            ### Early exit
+            if batch_index >= batch_count:
+                break
 
             ### Record inference time, do a forawrd pass
             start_event.record()
@@ -112,6 +116,7 @@ def evaluate(
                 100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
                 refresh=True)
             )
+    ### Save 
 
 ###
 ### Entry point

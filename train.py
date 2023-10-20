@@ -33,60 +33,6 @@ from arch.regvit import deit_small_register_patch16_224, deit_base_register_patc
 from utils import generate_pth_filename, get_args, save_argparse_options_to_json_config, update_argparse_options_from_json_config
 
 ###
-### Used for parsing commandline args that are comma separated (nice way to pass lists to argparse)
-###
-def csv_string_to_int_list( string : str ) -> List:
-    list = string.split(',')
-    int_list = [int(element) for element in list]
-    return int_list
-
-###
-### Parse all the options in the config.json, then update an argparse namespace with them
-###
-def update_argparse_options_from_json_config(
-    config_json_path: str, args: argparse.Namespace
-) -> argparse.Namespace:
-    ### Load json config from the path
-    with open(config_json_path, "r") as filehandle:
-        json_dict = json.load(filehandle)
-
-    ### Update 'args' based on json_dict items
-    args_dict = vars(args)
-    args_dict.update(json_dict)
-
-    ### Return a new argparse Namespace instance
-    updated_args = argparse.Namespace(**args_dict)
-    return updated_args
-
-###
-### Dump options to a .JSON file
-###
-def save_argparse_options_to_json_config(
-    config_json_path: str, args: argparse.Namespace
-) -> None:
-    ### Convert args into a dict
-    args_dict = vars(args)
-
-    ### Dump to string
-    args_dict_json_str = json.dumps(args_dict, indent=4)
-
-    ### Save to file
-    with open(config_json_path, "w") as filehandle:
-        filehandle.write(args_dict_json_str)
-
-###
-### Filename generation
-###
-def generate_pth_filename( profile : str, *args ) -> str:
-    format_string = '{}'.format(profile)
-    ### Append as many args as you'd like
-    for arg in args:
-        format_string += '_{}'
-    format_string += '.pth'
-
-    return format_string.format( *args )
-
-###
 ### Save Model Checkpoint
 ###
 def checkpoint_model(
@@ -205,11 +151,6 @@ if __name__ == '__main__':
         save_argparse_options_to_json_config(config_path, args)
         print('train.py: Created default config, exiting')
         exit(0)
-
-    ### Update r list
-    #if args.r_list != "":
-    #    args.r_list = csv_string_to_int_list(args.r_list)
-    #    print('train.py: args.r_list type: {} and value {}'.format(type(args.r_list, args.r_list)))
 
     ### Update parameters from config
     args = update_argparse_options_from_json_config(config_path, args)
