@@ -111,7 +111,7 @@ def evaluate(
 
             ### Update progress bar
             #dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average.item()), refresh=True)
-            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(
+            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (%): {:.2f}".format(
                 model_inference_time_tensor[0:(batch_index+1)].mean().item(), 
                 100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
                 refresh=True)
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         strategy='dp',
         devices=1,
         num_nodes=1,
-        precision='32',
+        precision='32-true',
     )
     fabric.launch()
 
