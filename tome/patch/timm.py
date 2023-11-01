@@ -49,6 +49,7 @@ class ToMeBlock(Block):
                     merge, x, self._tome_info["source"]
                 )
             x, self._tome_info["size"] = merge_wavg(merge, x, self._tome_info["size"])
+            #print('x shape post-merge: {}'.format(x.shape))
 
         x = x + self._drop_path2(self.ls2(self.mlp(self.norm2(x))))
         return x

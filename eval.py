@@ -71,7 +71,7 @@ def evaluate(
 
             ### Warmup
             if batch_index < 1:
-                for _ in range(25):
+                for _ in range(10):
                     model(input)
                 torch.cuda.synchronize()
 
@@ -116,7 +116,9 @@ def evaluate(
                 100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
                 refresh=True)
             )
-    ### Save 
+
+def list_to_int_list( list : List) -> List[int]:
+    return [int(k) for k in list]
 
 ###
 ### Entry point
@@ -138,7 +140,8 @@ if __name__ == '__main__':
         exit(0)
 
     ### Update parameters from config
-    args = update_argparse_options_from_json_config(config_path, args)
+    if args.load_config:
+        args = update_argparse_options_from_json_config(config_path, args)
 
     ### Set matmul precision to high
     torch.set_float32_matmul_precision('high')
@@ -181,8 +184,8 @@ if __name__ == '__main__':
         pass
     else:
         tome.patch.timm(model)
-        model.r = args.r_list if not args.r else args.r
-        #print('train.py: ToMe r type and value:{} / {}'.format( type(model.r), model.r ))
+        model.r = list_to_int_list(args.r_list) if not args.r else args.r
+        print('eval.py: ToMe r: {}'.format( model.r ))
 
     model       = fabric.setup_module(model, move_to_device=True)
     dataloader  = fabric.setup_dataloaders(dataloader)

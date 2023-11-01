@@ -11,6 +11,7 @@ def get_args() -> argparse.Namespace:
     ### General Parameters
     parser.add_argument('--profile', type=str, default=None)
     parser.add_argument('--profile-output-dir', default=None)
+    parser.add_argument('--load-config', action='store_true')
     parser.add_argument('--resume', action="store_true")
     parser.add_argument('--resume-checkpoint-idx', type=int, default=None)
     parser.add_argument('--dry-run-config-generate', action='store_true')
@@ -22,8 +23,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--forward-pass-count', default=None)
 
     ### ToMe Parameters
-    parser.add_argument('--r', type=int, default=12)
-    parser.add_argument('--r-list', nargs='+', default=None)
+    parser.add_argument('--r', type=int, default=None)
+    parser.add_argument('--r-list', nargs='+', default=[12]*12)
     parser.add_argument('--no-wrap', action='store_true')
 
     ### Train parameters
