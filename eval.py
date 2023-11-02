@@ -48,11 +48,11 @@ def evaluate(
     ### Lists that we use to collect data about our model
     ### NOTE: For timing, we put the tensors on the CPU since the CUDA timing returns Python float scalars
     ### NOTE: Check whether we are enforcing a forward pass count
-    model_inference_time_tensor = torch.empty(
-        size=(batch_count, 1), dtype=torch.float32, device="cpu"
+    model_inference_time_tensor = torch.zeros(
+        size=(batch_count,), dtype=torch.float32, device="cpu"
     )
-    model_correct_prediction_tensor = torch.empty(
-        size=(batch_count, 1), dtype=torch.float32, device="cuda"
+    model_correct_prediction_tensor = torch.zeros(
+        size=(batch_count,), dtype=torch.float32, device="cuda"
     )
     model_prediction_count = 0
 
