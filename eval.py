@@ -143,6 +143,10 @@ if __name__ == '__main__':
     if args.load_config:
         args = update_argparse_options_from_json_config(config_path, args)
 
+    ### Update forward pass count if it exists
+    if args.forward_pass_count is not None:
+        args.forward_pass_count = int(args.forward_pass_count)
+
     ### Set matmul precision to high
     torch.set_float32_matmul_precision('high')
 
