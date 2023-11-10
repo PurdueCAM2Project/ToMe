@@ -116,6 +116,10 @@ def evaluate(
                 100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
                 refresh=True)
             )
+    ### 
+    ### Print Info
+    ###
+    print('eval.py: profile {}\nAccuracy (%): {:.2f}\nLatency (ms): {:.2f}'.format(args.profile, 100.0 * model_correct_prediction_tensor.sum().item() / model_prediction_count, model_inference_time_tensor.mean().item()))
 
 def list_to_int_list( list : List) -> List[int]:
     return [int(k) for k in list]
