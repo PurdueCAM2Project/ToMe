@@ -21,6 +21,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--dataset-root-dir', type=str, default=None)
     parser.add_argument('--tensorboard-profiling', action='store_true')
     parser.add_argument('--forward-pass-count', default=None)
+    parser.add_argument('--no-progress-bar', action='store_true')
 
     ### ToMe Parameters
     parser.add_argument('--r', type=int, default=None)

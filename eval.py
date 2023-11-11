@@ -62,7 +62,7 @@ def evaluate(
     ###
     with torch.no_grad():
         ### Create tqdm object
-        dataloader_object = tqdm(dataloader)
+        dataloader_object = dataloader if args.no_progress_bar else tqdm(dataloader)
 
         for batch_index, (input, target) in enumerate(dataloader_object):
             ### Create CUDA timing events
@@ -111,11 +111,12 @@ def evaluate(
 
             ### Update progress bar
             #dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (ms): {:.2f}".format(inference_time_average, acc_top1_average.item()), refresh=True)
-            dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (%): {:.2f}".format(
-                model_inference_time_tensor[0:(batch_index+1)].mean().item(), 
-                100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
-                refresh=True)
-            )
+            if not args.no_progress_bar:
+                dataloader_object.set_description("Avg. Running Latency (ms): {:.2f} | Avg. Running Accuracy (%): {:.2f}".format(
+                    model_inference_time_tensor[0:(batch_index+1)].mean().item(), 
+                    100.0 * model_correct_prediction_tensor[0:(batch_index+1)].sum().item() / model_prediction_count, 
+                    refresh=True)
+                )
     ### 
     ### Print Info
     ###
