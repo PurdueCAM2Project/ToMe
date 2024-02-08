@@ -1,4 +1,4 @@
-# Token Merging: Your ViT but Faster
+# Token Merging: Your ViT but Faster (Hardware Aware Fork for Undisclosed Paper)
 
 Official PyTorch implemention of **ToMe** from our paper: [Token Merging: Your ViT but Faster](https://arxiv.org/abs/2210.09461).  
 Daniel Bolya, Cheng-Yang Fu, Xiaoliang Dai, Peizhao Zhang, Christoph Feichtenhofer, Judy Hoffman.
