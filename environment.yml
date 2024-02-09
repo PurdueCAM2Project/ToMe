@@ -1,4 +1,4 @@
-name: tome
+name: hwtome
 channels:
   - pytorch
   - defaults
