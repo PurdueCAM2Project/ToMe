@@ -1,46 +1,43 @@
 import torch
 
-
 ### DinoV2
 from dinov2.layers.block import (
     Block,
     NestedTensorBlock,
     drop_add_residual_stochastic_depth,
 )
+    
 from dinov2.layers.attention import (
     Attention,
     MemEffAttention,
     XFORMERS_AVAILABLE,
     XFORMERS_ENABLED,
 )
-from dinov2.hub.classifiers import _LinearClassifierWrapper
 
+from dinov2.hub.classifiers import _LinearClassifierWrapper
 
 ### ToMe
 from hwtome.merge import bipartite_soft_matching, merge_source, merge_wavg
 from hwtome.utils import parse_r
-
 
 ### Standard
 from typing import Any, Tuple, List, Dict, Callable
 import os
 import warnings
 
+# XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
+# try:
+#     if XFORMERS_ENABLED:
+#         from xformers.ops import memory_efficient_attention, unbind
 
-XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
-try:
-    if XFORMERS_ENABLED:
-        from xformers.ops import memory_efficient_attention, unbind
-
-        XFORMERS_AVAILABLE = True
-        warnings.warn("xFormers is available (Attention)")
-    else:
-        warnings.warn("xFormers is disabled (Attention)")
-        raise ImportError
-except ImportError:
-    XFORMERS_AVAILABLE = False
-    warnings.warn("xFormers is not available (Attention)")
-
+#         XFORMERS_AVAILABLE = True
+#         #warnings.warn("xFormers is available (Attention)")
+#     else:
+#         #warnings.warn("xFormers is disabled (Attention)")
+#         raise ImportError
+# except ImportError:
+#     XFORMERS_AVAILABLE = False
+#     #warnings.warn("xFormers is not available (Attention)")
 
 ###
 ### Custom Attention Mechanisms
@@ -75,7 +72,7 @@ class ToMeDinoV2Attention(Attention):
         return x, k.mean(dim=1)
 
 
-class ToMeDinoV2MemEffAttention(Attention):
+class ToMeDinoV2MemEffAttention(ToMeDinoV2Attention):
     def forward(self, x: torch.Tensor, attn_bias=None, attn_size=None) -> torch.Tensor:
         if not XFORMERS_AVAILABLE:
             if attn_bias is not None:
