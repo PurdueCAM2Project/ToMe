@@ -79,6 +79,8 @@ class ToMeDinoV2MemEffAttention(ToMeDinoV2Attention):
                 raise AssertionError("xFormers is required for using nested tensors")
             return super().forward(x)
 
+        raise AssertionError("HWToMe (currently) does not support MemEffAttention with prop_attn")
+
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads)
 
@@ -277,11 +279,11 @@ def apply_patch(
             ### NOTE: Why is this not supported? memory_efficient_attention requires certain dimensionalities / memory alignment requirements
             ### that seems to be finicky when we attempt to use memory efficient attention. See commented out section and do some testing to see this
             ### Therefore, we ignore this flag if we are doing MemoryEfficientAttention
-            if prop_attn and not warn_prop_attn:
-                print(
-                    "hwtome/patch/dinov2.py: Proportional attention is ignored for MemEffAttention Blocks"
-                )
-                warn_prop_attn = True
+            # if prop_attn and not warn_prop_attn:
+            #     print(
+            #         "hwtome/patch/dinov2.py: Proportional attention is ignored for MemEffAttention Blocks"
+            #     )
+            #     warn_prop_attn = True
             module.__class__ = ToMeDinoV2MemEffAttention
         elif isinstance(module, Attention):
             module.__class__ = ToMeDinoV2Attention
