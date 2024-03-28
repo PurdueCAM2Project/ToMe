@@ -1,4 +1,4 @@
-name: tome
+name: hwtome
 channels:
   - pytorch
   - defaults
@@ -12,6 +12,7 @@ dependencies:
   - numpy
   - timm>=0.9.0
   - jupyter
+  - dinov2
   - pip:
     - pillow
     - tqdm

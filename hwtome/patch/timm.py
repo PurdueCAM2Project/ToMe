@@ -13,8 +13,8 @@ from typing import Tuple
 import torch
 from timm.models.vision_transformer import Attention, Block, VisionTransformer
 
-from tome.merge import bipartite_soft_matching, merge_source, merge_wavg
-from tome.utils import parse_r
+from hwtome.merge import bipartite_soft_matching, merge_source, merge_wavg
+from hwtome.utils import parse_r
 
 class ToMeBlock(Block):
     """
@@ -72,11 +72,8 @@ class ToMeAttention(Attention):
             .reshape(B, N, 3, self.num_heads, C // self.num_heads)
             .permute(2, 0, 3, 1, 4)
         )
-        q, k, v = (
-            qkv[0],
-            qkv[1],
-            qkv[2],
-        )  # make torchscript happy (cannot use tensor as tuple)
+        ### Using unbind(...) instead
+        q, k, v = qkv.unbind(0)
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
 
